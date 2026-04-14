@@ -52,8 +52,8 @@ pipeline {
         stage('Deploy Backend') {
             steps {
                 sh '''
-                mkdir -p $APP_DIR
-                cp -r backend/* $APP_DIR/
+                sudo mkdir -p $APP_DIR
+                sudo cp -r backend/* $APP_DIR/
                 '''
             }
         }
@@ -62,8 +62,8 @@ pipeline {
             steps {
                 sh '''
                 cd $APP_DIR
-                pm2 delete all || true
-                pm2 start index.js || pm2 start server.js
+                sudo pm2 delete all || true
+                sudo pm2 start index.js || pm2 start server.js
                 '''
             }
         }
