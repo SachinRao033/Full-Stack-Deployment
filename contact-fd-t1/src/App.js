@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API = "http://43.205.214.10:3000/api/contacts";
+const API = "/api/contacts";
 
 function App() {
   const [contacts, setContacts] = useState([]);
