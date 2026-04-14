@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "/home/ubuntu/app"
+        APP_DIR = "${WORKSPACE}/app"
     }
 
     stages {
@@ -52,8 +52,13 @@ pipeline {
         stage('Deploy Backend') {
             steps {
                 sh '''
-                sudo mkdir -p $APP_DIR
-                sudo cp -r backend/* $APP_DIR/
+                echo "Creating app directory..."
+                mkdir -p $APP_DIR
+
+                echo "Copying backend files..."
+                cp -r backend/* $APP_DIR/
+
+                ls -l $APP_DIR
                 '''
             }
         }
@@ -62,8 +67,19 @@ pipeline {
             steps {
                 sh '''
                 cd $APP_DIR
+
                 sudo pm2 delete all || true
-                sudo pm2 start index.js || pm2 start server.js
+
+                if [ -f index.js ]; then
+                    sudo pm2 start index.js
+                elif [ -f server.js ]; then
+                    sudo pm2 start server.js
+                else
+                    echo "No entry file found"
+                    exit 1
+                fi
+
+                pm2 save
                 '''
             }
         }
