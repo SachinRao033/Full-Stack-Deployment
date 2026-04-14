@@ -62,26 +62,26 @@ pipeline {
                 '''
             }
         }
+	
+	stage('Start Backend') {
+    	    steps {
+        	sh '''
+        	cd $APP_DIR
+	
+        	pm2 delete all || true
 
-        stage('Start Backend') {
-            steps {
-                sh '''
-                cd $APP_DIR
-
-                sudo pm2 delete all || true
-
-                if [ -f index.js ]; then
-                    sudo pm2 start index.js
-                elif [ -f server.js ]; then
-                    sudo pm2 start server.js
-                else
-                    echo "No entry file found"
-                    exit 1
-                fi
-
-                pm2 save
-                '''
-            }
-        }
+        	if [ -f index.js ]; then
+            	   pm2 start index.js
+        	elif [ -f server.js ]; then
+            	   pm2 start server.js
+        	else
+            	   echo "No entry file found"
+            	exit 1
+        	fi
+	
+        	pm2 save
+        	'''
+	    }
+	}
     }
 }
