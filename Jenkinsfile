@@ -13,37 +13,29 @@ pipeline {
             }
         }
 
-        stage('Install Backend & Frontend') {
+        stage('Install Backend & Frontend & Build Frontend') {
             steps {
                 sh '''
                 cd backend
                 npm install
-                '''
-            }
-
-            steps {
-                sh '''
-                cd frontend
+                cd ../frontend
                 npm install
-                '''
-            }
-
-             steps {
-                sh '''
-                cd frontend
+                cd ../frontend
                 npm run build
                 '''
             }
         }
 
-        stage('Deploy Frontend & Backend') {
+        stage('Deploy Frontend') {
             steps {
                 sh '''
                 sudo rm -rf /var/www/html/* || true
                 sudo cp -r frontend/build/* /var/www/html/
                 '''
             }
+        }
 
+        stage('Deploy Backend') {
             steps {
                 sh '''
                 echo "Creating app directory..."
