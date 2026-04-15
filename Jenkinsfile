@@ -13,26 +13,22 @@ pipeline {
             }
         }
 
-        stage('Install Backend') {
+        stage('Install Backend & Frontend') {
             steps {
                 sh '''
                 cd backend
                 npm install
                 '''
             }
-        }
 
-        stage('Install Frontend') {
             steps {
                 sh '''
                 cd frontend
                 npm install
                 '''
             }
-        }
 
-        stage('Build Frontend') {
-            steps {
+             steps {
                 sh '''
                 cd frontend
                 npm run build
@@ -40,16 +36,14 @@ pipeline {
             }
         }
 
-        stage('Deploy Frontend') {
+        stage('Deploy Frontend & Backend') {
             steps {
                 sh '''
                 sudo rm -rf /var/www/html/* || true
                 sudo cp -r frontend/build/* /var/www/html/
                 '''
             }
-        }
 
-        stage('Deploy Backend') {
             steps {
                 sh '''
                 echo "Creating app directory..."
@@ -62,12 +56,12 @@ pipeline {
                 '''
             }
         }
-	
+
 	stage('Start Backend') {
     	    steps {
         	sh '''
         	cd $APP_DIR
-	
+
         	pm2 delete all || true
 
         	if [ -f index.js ]; then
@@ -78,7 +72,7 @@ pipeline {
             	   echo "No entry file found"
             	exit 1
         	fi
-	
+
         	pm2 save
         	'''
 	    }
