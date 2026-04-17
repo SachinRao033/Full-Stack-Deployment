@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'Agent-01' }
+    agent { label 'agent-01' }
 
     environment {
         APP_DIR = "${WORKSPACE}/app"
