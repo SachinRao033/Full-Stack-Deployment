@@ -2,7 +2,8 @@ pipeline {
     agent { label 'agent-01' }
 
     environment {
-        APP_DIR = "${WORKSPACE}/app"
+        APP_DIR = "/home/ubuntu/app"
+        DATA_DIR = "/home/ubuntu/data"
     }
 
     stages {
@@ -13,14 +14,18 @@ pipeline {
             }
         }
 
-        stage('Install Backend & Frontend & Build Frontend') {
+        stage('Install & Build') {
             steps {
                 sh '''
+                echo "Installing Backend..."
                 cd backend
                 npm install
+
+                echo "Installing Frontend..."
                 cd ../frontend
                 npm install
-                cd ../frontend
+
+                echo "Building Frontend..."
                 npm run build
                 '''
             }
@@ -29,6 +34,7 @@ pipeline {
         stage('Deploy Frontend') {
             steps {
                 sh '''
+                echo "Deploying Frontend..."
                 sudo rm -rf /var/www/html/* || true
                 sudo cp -r frontend/build/* /var/www/html/
                 '''
@@ -38,36 +44,43 @@ pipeline {
         stage('Deploy Backend') {
             steps {
                 sh '''
-                echo "Creating app directory..."
+                echo "Creating directories..."
                 mkdir -p $APP_DIR
+                mkdir -p $DATA_DIR
 
                 echo "Copying backend files..."
                 cp -r backend/* $APP_DIR/
+
+                echo "Copying database..."
+                cp backend/contacts.db $DATA_DIR/
 
                 ls -l $APP_DIR
                 '''
             }
         }
 
-	stage('Start Backend') {
-    	    steps {
-        	sh '''
-        	cd $APP_DIR
+        stage('Start Backend') {
+            steps {
+                sh '''
+                cd $APP_DIR
 
-        	pm2 delete all || true
+                echo "Stopping old backend..."
+                pm2 delete backend || true
 
-        	if [ -f index.js ]; then
-            	   pm2 start index.js
-        	elif [ -f server.js ]; then
-            	   pm2 start server.js
-        	else
-            	   echo "No entry file found"
-            	exit 1
-        	fi
+                echo "Starting backend..."
 
-        	pm2 save
-        	'''
-	    }
-	}
+                if [ -f index.js ]; then
+                    pm2 start index.js --name backend
+                elif [ -f server.js ]; then
+                    pm2 start server.js --name backend
+                else
+                    echo "No entry file found"
+                    exit 1
+                fi
+
+                pm2 save
+                '''
+            }
+        }
     }
 }
