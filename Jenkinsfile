@@ -2,83 +2,54 @@ pipeline {
     agent { label 'agent-01' }
 
     environment {
-        APP_DIR = "/home/ubuntu/app"
-        DATA_DIR = "/home/ubuntu/data"
+        APP_DIR = "/home/jenkins/app"
     }
 
     stages {
 
-        stage('Clone Code') {
+        stage('Clean') {
             steps {
-                git branch: 'main', url: 'https://github.com/SachinRao033/Full-Stack-Deployment.git'
+                sh 'rm -rf $APP_DIR || true'
             }
         }
 
-        stage('Install & Build') {
+        stage('Clone Repo') {
             steps {
-                sh '''
-                echo "Installing Backend..."
-                cd backend
-                npm install
-
-                echo "Installing Frontend..."
-                cd ../frontend
-                npm install
-
-                echo "Building Frontend..."
-                npm run build
-                '''
+                git 'https://github.com/SachinRao033/Full-Stack-Deployment.git'
             }
         }
 
-        stage('Deploy Frontend') {
+        stage('Copy Files') {
             steps {
                 sh '''
-                echo "Deploying Frontend..."
-                sudo rm -rf /var/www/html/* || true
-                sudo cp -r frontend/build/* /var/www/html/
-                '''
-            }
-        }
-
-        stage('Deploy Backend') {
-            steps {
-                sh '''
-                echo "Creating directories..."
                 mkdir -p $APP_DIR
-                mkdir -p $DATA_DIR
-
-                echo "Copying backend files..."
-                cp -r backend/* $APP_DIR/
-
-                echo "Copying database..."
-                cp backend/contacts.db $DATA_DIR/
-
-                ls -l $APP_DIR
+                cp -r * $APP_DIR
                 '''
             }
         }
 
-        stage('Start Backend') {
+        stage('Install Backend') {
+            steps {
+                dir("$APP_DIR/backend") {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir("$APP_DIR/frontend") {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Start Services') {
             steps {
                 sh '''
-                cd $APP_DIR
-
-                echo "Stopping old backend..."
-                pm2 delete backend || true
-
-                echo "Starting backend..."
-
-                if [ -f index.js ]; then
-                    pm2 start index.js --name backend
-                elif [ -f server.js ]; then
-                    pm2 start server.js --name backend
-                else
-                    echo "No entry file found"
-                    exit 1
-                fi
-
-                pm2 save
+                sudo systemctl restart myapp
+                sudo systemctl reload nginx
                 '''
             }
         }
