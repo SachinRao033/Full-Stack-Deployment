@@ -4,7 +4,7 @@ import sqlite3 from "sqlite3";
 import { v4 as uuid } from "uuid";
 
 const app = express();
-const db = new sqlite3.Database('/home/jenkins/data/contacts.db');
+const db = new sqlite3.Database('/home/ubuntu/data/contacts.db');
 
 app.use(express.json());
 app.use(cors());
