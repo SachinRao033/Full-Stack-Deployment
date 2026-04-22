@@ -2,54 +2,87 @@ pipeline {
     agent { label 'agent-01' }
 
     environment {
-        APP_DIR = "/home/jenkins/app"
+        APP_DIR = "/home/ubuntu/app"
+        DATA_DIR = "/home/ubuntu/data"
     }
 
     stages {
 
-        stage('Clean') {
+        stage('Clean Workspace') {
             steps {
-                sh 'rm -rf $APP_DIR || true'
+                deleteDir()
             }
         }
 
-        stage('Clone Repo') {
+        stage('Clone Code') {
             steps {
-                git 'https://github.com/SachinRao033/Full-Stack-Deployment.git'
+                git branch: 'main', url: 'https://github.com/SachinRao033/Full-Stack-Deployment.git'
             }
         }
 
-        stage('Copy Files') {
+        stage('Install & Build') {
             steps {
                 sh '''
-                mkdir -p $APP_DIR
-                cp -r * $APP_DIR
+                set -e
+
+                echo "Installing Backend..."
+                cd backend
+                npm install
+
+                echo "Installing Frontend..."
+                cd ../frontend
+                npm install
+
+                echo "Building Frontend..."
+                npm run build
                 '''
             }
         }
 
-        stage('Install Backend') {
-            steps {
-                dir("$APP_DIR/backend") {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir("$APP_DIR/frontend") {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
-            }
-        }
-
-        stage('Start Services') {
+        stage('Deploy Backend') {
             steps {
                 sh '''
-                sudo systemctl restart myapp
-                sudo systemctl reload nginx
+                echo "Cleaning backend..."
+                rm -rf $APP_DIR/*
+                mkdir -p $APP_DIR
+
+                echo "Copying backend..."
+                cp -r backend/* $APP_DIR/
+
+                echo "Handling DB..."
+                if [ ! -f $DATA_DIR/contacts.db ]; then
+                    cp backend/contacts.db $DATA_DIR/
+                else
+                    echo "DB exists, skipping"
+                fi
+                '''
+            }
+        }
+
+        stage('Deploy Frontend') {
+            steps {
+                sh '''
+                echo "Deploying frontend..."
+                rm -rf /var/www/html/*
+                cp -r frontend/build/* /var/www/html/
+                '''
+            }
+        }
+
+        stage('Start Backend') {
+            steps {
+                sh '''
+                cd $APP_DIR
+
+                echo "Starting backend..."
+
+                if pm2 list | grep -q backend; then
+                    pm2 restart backend
+                else
+                    pm2 start index.js --name backend
+                fi
+
+                pm2 save --force
                 '''
             }
         }
