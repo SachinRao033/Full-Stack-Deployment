@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'Node-1' }
+    agent { label 'agent-01' }
 
     environment {
         APP_DIR = "/home/ubuntu/app"
@@ -16,7 +16,7 @@ pipeline {
 
         stage('Clone Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/harikamekala222/Full-Stack-Deployment.git'
+                git branch: 'main', url: 'https://github.com/SachinRao033/Full-Stack-Deployment.git'
             }
         }
 
