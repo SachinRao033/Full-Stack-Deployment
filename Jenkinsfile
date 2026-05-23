@@ -12,25 +12,25 @@ pipeline {
 
         stage('Stop Old Containers') {
             steps {
-                sh 'docker compose down || true'
+                sh 'sudo docker compose down || true'
             }
         }
 
         stage('Build Containers') {
             steps {
-                sh 'docker compose build'
+                sh 'sudo docker compose build --no-cache'
             }
         }
 
         stage('Run Containers') {
             steps {
-                sh 'docker compose up -d'
+                sh 'sudo docker compose up -d'
             }
         }
 
         stage('Verify Containers') {
             steps {
-                sh 'docker ps'
+                sh 'sudo docker ps'
             }
         }
     }
