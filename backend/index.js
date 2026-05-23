@@ -3,8 +3,28 @@ import cors from "cors";
 import sqlite3 from "sqlite3";
 import { v4 as uuid } from "uuid";
 
+//new code
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const dbPath = path.join(__dirname, "contacts.db");
+
+
 const app = express();
-const db = new sqlite3.Database('/home/ubuntu/data/contacts.db');
+
+//new code
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error("Database error:", err.message);
+  } else {
+    console.log("Connected to SQLite database");
+  }
+});
+
+// older version --> const db = new sqlite3.Database('/home/ubuntu/data/contacts.db');
 
 app.use(express.json());
 app.use(cors());
@@ -62,4 +82,7 @@ router.delete("/contacts/:id", (req, res) => {
 // mount API prefix
 app.use("/api", router);
 
-app.listen(3000, () => console.log("Contact API running on port 3000"));
+//Older version --> app.listen(3000, () => console.log("Contact API running on port 3000"));
+app.listen(5000, "0.0.0.0", () => {
+  console.log("Contact API running on port 5000");
+});
